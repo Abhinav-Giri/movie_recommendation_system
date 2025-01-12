@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Recommender</title>
+    <style>
+        :root {
+            --primary-color: #2a4365;
+            --secondary-color: #4299e1;
+            --background-color: #f7fafc;
+            --text-color: #2d3748;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            line-height: 1.6;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: white;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        h1 {
+            color: var(--primary-color);
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 1.5rem;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+        }
+
+        select {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid #e2e8f0;
+            border-radius: 4px;
+            background-color: white;
+            font-size: 1rem;
+        }
+
+        button {
+            background-color: var(--secondary-color);
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 1rem;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--primary-color);
+        }
+
+        #recommendation {
+            margin-top: 2rem;
+            padding: 1.5rem;
+            background-color: #ebf8ff;
+            border-radius: 4px;
+            display: none;
+        }
+
+        #recommendation.visible {
+            display: block;
+        }
+
+        @media (max-width: 640px) {
+            body {
+                padding: 1rem;
+            }
+
+            .container {
+                padding: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Movie Recommender</h1>
+        
+        <div class="form-group">
+            <label for="genre">Preferred Genre</label>
+            <select id="genre" aria-label="Select your preferred genre">
+                <option value="">Select a genre</option>
+                <option value="action">Action</option>
+                <option value="comedy">Comedy</option>
+                <option value="drama">Drama</option>
+                <option value="horror">Horror</option>
+                <option value="scifi">Sci-Fi</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="duration">Preferred Duration</label>
+            <select id="duration" aria-label="Select your preferred movie duration">
+                <option value="">Select duration</option>
+                <option value="short">Short (under 90 minutes)</option>
+                <option value="medium">Medium (90-120 minutes)</option>
+                <option value="long">Long (over 120 minutes)</option>
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="mood">Current Mood</label>
+            <select id="mood" aria-label="Select your current mood">
+                <option value="">Select mood</option>
+                <option value="happy">Happy</option>
+                <option value="relaxed">Relaxed</option>
+                <option value="excited">Excited</option>
+                <option value="adventurous">Adventurous</option>
+            </select>
+        </div>
+
+        <button id="recommendBtn" aria-label="Get movie recommendation">Get Recommendation</button>
+
+        <div id="recommendation" role="alert" aria-live="polite"></div>
+    </div>
+
+    <script>
+        const movieDatabase = {
+            action: {
+                short: {
+                    happy: "John Wick (89 mins) - A high-energy action film perfect for an upbeat mood",
+                    relaxed: "Taken (84 mins) - A thrilling yet controlled pace action movie",
+                    excited: "Crank (88 mins) - Non-stop adrenaline rush from start to finish",
+                    adventurous: "Run Lola Run (80 mins) - An innovative action-packed adventure"
+                },
+                medium: {
+                    happy: "Mission: Impossible (110 mins) - Classic action with a feel-good vibe",
+                    relaxed: "Casino Royale (115 mins) - Sophisticated action with measured pacing",
+                    excited: "Mad Max: Fury Road (120 mins) - High-octane post-apocalyptic thrill ride",
+                    adventurous: "Raiders of the Lost Ark (115 mins) - The ultimate adventure movie"
+                },
+                long: {
+                    happy: "Avengers: Infinity War (149 mins) - Epic superhero action with moments of joy",
+                    relaxed: "Heat (170 mins) - Methodical action thriller",
+                    excited: "The Dark Knight (152 mins) - Intense superhero action drama",
+                    adventurous: "Lord of the Rings: Fellowship of the Ring (178 mins) - Epic fantasy adventure"
+                }
+            },
+            comedy: {
+                short: {
+                    happy: "Shaun of the Dead (89 mins) - Hilarious zombie comedy",
+                    relaxed: "Napoleon Dynamite (82 mins) - Quirky, laid-back humor",
+                    excited: "Airplane! (88 mins) - Fast-paced comedy classic",
+                    adventurous: "The Princess Bride (88 mins) - Whimsical adventure comedy"
+                },
+                medium: {
+                    happy: "The Grand Budapest Hotel (99 mins) - Charming and witty adventure",
+                    relaxed: "The Big Sick (120 mins) - Heartwarming romantic comedy",
+                    excited: "Groundhog Day (101 mins) - Energetic and philosophical comedy",
+                    adventurous: "Game Night (100 mins) - Thrilling comedy adventure"
+                },
+                long: {
+                    happy: "Bridesmaids (125 mins) - Hilarious female-led comedy",
+                    relaxed: "The Secret Life of Walter Mitty (125 mins) - Peaceful comedy adventure",
+                    excited: "This Is the End (126 mins) - Wild apocalyptic comedy",
+                    adventurous: "The Life Aquatic with Steve Zissou (151 mins) - Quirky oceanographic adventure"
+                }
+            },
+            drama: {
+                short: {
+                    happy: "Little Miss Sunshine (89 mins) - Uplifting family drama",
+                    relaxed: "Lost in Translation (85 mins) - Contemplative character study",
+                    excited: "Whiplash (86 mins) - Intense musical drama",
+                    adventurous: "Stand By Me (89 mins) - Coming-of-age adventure"
+                },
+                medium: {
+                    happy: "The Artist (100 mins) - Charming silent film drama",
+                    relaxed: "Moonlight (111 mins) - Beautiful, meditative drama",
+                    excited: "Black Swan (108 mins) - Thrilling psychological drama",
+                    adventurous: "Into the Wild (115 mins) - Inspiring journey of discovery"
+                },
+                long: {
+                    happy: "The Shawshank Redemption (142 mins) - Inspiring prison drama",
+                    relaxed: "The Green Mile (189 mins) - Thoughtful supernatural drama",
+                    excited: "Inception (148 mins) - Mind-bending sci-fi drama",
+                    adventurous: "Lawrence of Arabia (216 mins) - Epic historical adventure"
+                }
+            },
+            horror: {
+                short: {
+                    happy: "Tucker & Dale vs. Evil (89 mins) - Horror-comedy with heart",
+                    relaxed: "A Quiet Place (90 mins) - Atmospheric horror thriller",
+                    excited: "Evil Dead (85 mins) - High-energy supernatural horror",
+                    adventurous: "The Descent (89 mins) - Cave exploration horror"
+                },
+                medium: {
+                    happy: "Ghostbusters (105 mins) - Supernatural comedy with scares",
+                    relaxed: "The Others (104 mins) - Subtle supernatural horror",
+                    excited: "The Cabin in the Woods (95 mins) - Meta horror thriller",
+                    adventurous: "Train to Busan (118 mins) - Thrilling zombie adventure"
+                },
+                long: {
+                    happy: "World War Z (123 mins) - Global zombie adventure",
+                    relaxed: "The Sixth Sense (127 mins) - Supernatural mystery",
+                    excited: "It (135 mins) - Intense supernatural horror",
+                    adventurous: "Aliens (137 mins) - Sci-fi horror adventure"
+                }
+            },
+            scifi: {
+                short: {
+                    happy: "Back to the Future (89 mins) - Classic sci-fi adventure",
+                    relaxed: "Moon (87 mins) - Thoughtful space drama",
+                    excited: "Edge of Tomorrow (89 mins) - Fast-paced sci-fi action",
+                    adventurous: "Source Code (89 mins) - Mind-bending sci-fi thriller"
+                },
+                medium: {
+                    happy: "Wall-E (98 mins) - Heartwarming sci-fi animation",
+                    relaxed: "Arrival (116 mins) - Cerebral alien contact story",
+                    excited: "District 9 (112 mins) - Intense alien action drama",
+                    adventurous: "Serenity (119 mins) - Space western adventure"
+                },
+                long: {
+                    happy: "Contact (150 mins) - Optimistic space exploration drama",
+                    relaxed: "Solaris (122 mins) - Contemplative space journey",
+                    excited: "Interstellar (169 mins) - Epic space exploration",
+                    adventurous: "Dune (155 mins) - Epic sci-fi adventure"
+                }
+            }
+        };
+
+        document.getElementById('recommendBtn').addEventListener('click', () => {
+            const genre = document.getElementById('genre').value;
+            const duration = document.getElementById('duration').value;
+            const mood = document.getElementById('mood').value;
+            const recommendationDiv = document.getElementById('recommendation');
+
+            if (!genre || !duration || !mood) {
+                recommendationDiv.textContent = "Please select all options to get a recommendation.";
+                recommendationDiv.className = "visible";
+                return;
+            }
+
+            const recommendation = movieDatabase[genre][duration][mood];
+            recommendationDiv.textContent = `Based on your preferences, we recommend watching ${recommendation}`;
+            recommendationDiv.className = "visible";
+        });
+    </script>
+</body>
+</html>
